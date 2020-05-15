@@ -120,9 +120,6 @@ def download_pdf(web_loc, date, directory="pdfs/"):
     Returns:
         string -- path to downloaded file
     """
-    '''
-    date should be in following format: 180601
-    '''
     [name] = web_loc.split('/')[-1:]
     r = requests.get(web_loc)
     file_loc = directory+"["+date+"]"+name
