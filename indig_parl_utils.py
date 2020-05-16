@@ -10,7 +10,7 @@ from datetime import datetime
 from indig_parl_logger import get_logger
 
 utils_logger = get_logger("Indig_Parl_Utils",
-                          a_log_file='NWT/logs/indig_parl_utils_debug.log')
+                          a_log_file='logs/indig_parl_utils_debug.log')
 
 
 def convert_str_dte(dte_str, str_from_fmt, str_to_fmt):
