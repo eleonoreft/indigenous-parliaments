@@ -3,6 +3,7 @@
 import re
 
 import indig_parl_utils as utils
+from indig_parl_re import text_split
 
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
@@ -37,35 +38,37 @@ def pdf_to_text(path):
     return raw_text
 
 
-def text_rem_patterns(text, rem_patterns=[]):
-    if rem_patterns:
-        for pattern in rem_patterns:
-            text = re.sub(pattern, ' ', text)
-            pdfs_logger.debug('Removed %s' % pattern)
-    return text
+# def text_rem_patterns(text, rem_patterns=[]):
+#     if rem_patterns:
+#         for pattern in rem_patterns:
+#             text = re.sub(pattern, ' ', text)
+#             pdfs_logger.debug('Removed %s' % pattern)
+#     return text
 
 
-def text_find_pattern(text, pattern):
-    match = re.compile(pattern).search(text)
-    if match:
-        pdfs_logger.debug('%s match found' % pattern)
-        return True
-    pdfs_logger.debug('%s match NOT found' % pattern)
-    return False
+# def text_find_pattern(text, pattern):
+#     match = re.compile(pattern).search(text)
+#     if match:
+#         pdfs_logger.debug('%s match found' % pattern)
+#         return True
+#     pdfs_logger.debug('%s match NOT found' % pattern)
+#     return False
 
 
-def text_extract_pattern(text, pattern):
-    return re.compile(pattern).search(text)
+# def text_extract_pattern(text, pattern):
+#     return re.compile(pattern).search(text)
 
 
-def text_split(text, pattern, mx_split=0):
-    # Drop the first element in the list
-    return re.split(pattern, text, maxsplit=mx_split)[1:]
+# def text_split(text, pattern, mx_split=0):
+#     # Drop the first element in the list
+#     return re.split(pattern, text, maxsplit=mx_split)[1:]
 
 
 def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
                        csv_name, str_date):
-    quest_dialog_list = text_split(oral_q_section, question_head_ptrn)
+    # Drop the first element
+    quest_dialog_list = text_split(oral_q_section, question_head_ptrn)[1:]
+
     utils.send_text_to_file('NWT/tmp/'+str_date+'raw_oral_questions_list.txt',
                             quest_dialog_list, data_type='list')
     # repair titles
