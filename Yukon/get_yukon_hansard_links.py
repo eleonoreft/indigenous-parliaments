@@ -52,8 +52,7 @@ def main():
     csv_from_list('Yukon/yukon_hansards.csv',
                   links_table, header_row=csv_title)
     yk_logger.debug('Created CSV: Yukon/yukon_hansards.csv')
-    for row in links_table:
-        print(row)
+    print('List of Yukon hansard links created at: Yukon/yukon_hansards.csv')
 
 
 if __name__ == '__main__':
