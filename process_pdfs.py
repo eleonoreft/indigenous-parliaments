@@ -38,32 +38,6 @@ def pdf_to_text(path):
     return raw_text
 
 
-# def text_rem_patterns(text, rem_patterns=[]):
-#     if rem_patterns:
-#         for pattern in rem_patterns:
-#             text = re.sub(pattern, ' ', text)
-#             pdfs_logger.debug('Removed %s' % pattern)
-#     return text
-
-
-# def text_find_pattern(text, pattern):
-#     match = re.compile(pattern).search(text)
-#     if match:
-#         pdfs_logger.debug('%s match found' % pattern)
-#         return True
-#     pdfs_logger.debug('%s match NOT found' % pattern)
-#     return False
-
-
-# def text_extract_pattern(text, pattern):
-#     return re.compile(pattern).search(text)
-
-
-# def text_split(text, pattern, mx_split=0):
-#     # Drop the first element in the list
-#     return re.split(pattern, text, maxsplit=mx_split)[1:]
-
-
 def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
                        csv_name, str_date):
     # Drop the first element
