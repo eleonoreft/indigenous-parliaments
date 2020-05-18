@@ -129,6 +129,29 @@ def download_pdf(web_loc, date, directory="pdfs/"):
     return file_loc
 
 
+def download_mht(web_loc, date, directory="mhts/"):
+    """Downloads a MHT file form webaddress 'web_loc' and saves it to location
+    'directory'
+
+    Arguments:
+        web_loc {[type]} -- [description]
+        date {[type]} -- [description]
+
+    Keyword Arguments:
+        directory {str} -- [description] (default: {"pdfs/"})
+
+    Returns:
+        string -- path to downloaded file
+    """
+    [name] = web_loc.split('/')[-1:]
+    r = requests.get(web_loc)
+    file_loc = directory+"["+date+"]"+name
+    with open(file_loc, 'wb') as f:
+        f.write(r.content)
+    utils_logger.debug("MHT file created: %s" % file_loc)
+    return file_loc
+
+
 def csv_from_list(csv_name, csv_list, header_row=[]):
     """Creates a CS file from a list of lists ('csv_list') and stores it to
     location 'csv_name'.
