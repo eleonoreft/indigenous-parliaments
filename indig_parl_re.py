@@ -12,14 +12,6 @@ re_logger = get_logger("Process_PDF_Handards",
                        a_log_file='NWT/logs/proc_pdfs_hansards_debug.log')
 
 
-# def text_rem_patterns(text, rem_patterns=[]):
-#     if rem_patterns:
-#         for pattern in rem_patterns:
-#             text = re.sub(pattern, ' ', text)
-#             re_logger.debug('Removed %s' % pattern)
-#     return text
-
-
 def text_find_pattern(text, pattern):
     match = re.compile(pattern).search(text)
     if match:
