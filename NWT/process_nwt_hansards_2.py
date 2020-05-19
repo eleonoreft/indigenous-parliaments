@@ -4,6 +4,7 @@ import indig_parl_utils as utils
 import process_pdfs as procpdf
 import process_docs as procdoc
 
+from indig_parl_re import text_rem_patterns, text_extract_pattern
 from indig_parl_logger import get_logger
 
 
@@ -36,16 +37,16 @@ def process_pdfs(pdf_path, str_date, file_prefix):
     try:
         pdf_text = procpdf.pdf_to_text(pdf_path)
         utils.send_text_to_file('NWT/tmp/'+str_date+'pdf_text.txt', pdf_text)
-        flat_text = procpdf.text_rem_patterns(pdf_text,
-                                              title_patterns + ['\n'])
+        flat_text = text_rem_patterns(pdf_text,
+                                      title_patterns + ['\n'])
 
         if sec_head in flat_text:
             print('(|)')
             nwt_logger.debug('ORAL QUESTION FOUND in %s' % pdf_path)
             utils.send_text_to_file('NWT/tmp/'+str_date+'flat_text.txt',
                                     flat_text)
-            oral_q_section = procpdf.text_extract_pattern(flat_text,
-                                                          oral_sec_pattern)
+            oral_q_section = text_extract_pattern(flat_text,
+                                                  oral_sec_pattern)
             utils.send_text_to_file('NWT/tmp/'+str_date+'oral_q_sec.txt',
                                     oral_q_section.group(1))
 
