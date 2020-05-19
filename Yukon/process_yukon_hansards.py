@@ -43,28 +43,6 @@ def get_csv_links(csv_pth, columns, line_zero=False):
     return lines
 
 
-# def download_mht(web_loc, date, directory="mhts/"):
-#     """Downloads a MHT file form webaddress 'web_loc' and saves it to location
-#     'directory'
-
-#     Arguments:
-#         web_loc {[type]} -- [description]
-#         date {[type]} -- [description]
-
-#     Keyword Arguments:
-#         directory {str} -- [description] (default: {"pdfs/"})
-
-#     Returns:
-#         string -- path to downloaded file
-#     """
-#     [name] = web_loc.split('/')[-1:]
-#     r = requests.get(web_loc)
-#     file_loc = directory+"["+date+"]"+name
-#     with open(file_loc, 'wb') as f:
-#         f.write(r.content)
-#     return file_loc
-
-
 def download_hansards(csv_pth, columns, to_get):
     '''
     Open csv file in "csv_pth" with column headers in list "columns" and
