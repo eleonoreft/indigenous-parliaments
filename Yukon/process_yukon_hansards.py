@@ -2,14 +2,15 @@
 
 import csv
 import requests
-# import docx
+
+import process_pdfs as procpdf
 
 from weasyprint import HTML
 
 from indig_parl_logger import get_logger
-from indig_parl_utils import download_mht
+from indig_parl_utils import download_mht, send_text_to_file
+from indig_parl_re import text_rem_patterns, text_extract_pattern
 from process_mhts import extract_files
-# from process_docs import get_doc_obj_txt
 
 Yukon_logger = get_logger("Process_Yukon_Hansards",
                           a_log_file='Yukon/logs/proc_yukon_debug.log')
@@ -43,18 +44,45 @@ def get_csv_links(csv_pth, columns, line_zero=False):
     return lines
 
 
-def download_hansards(csv_pth, columns, to_get):
-    '''
-    Open csv file in "csv_pth" with column headers in list "columns" and
-    download the files to the required folders. The "to_get" list entries store
-    [{File store location}, {Column with file link}, {return dictionary 
-    key:value pair}]
-    e.g.: 
-    columns = ["Date_Long", "Date_Short", "MHT", "PDF"]
-    to_get = {['Yukon/mhts/', 'MHT', ['Date_Short','MHT']], 
-              ['Yukon/pdfs/', 'PDF', ['Date_short','PDF']]}
-    '''
-    pass
+def process_converted_pdfs(pdf_path, str_date, file_prefix):
+
+    # title_patterns = [r'Yukon Legislative Assembly', r'Page\s\d{1,4}',
+    #                   r'[A-Z][a-z]+\s\d{1,2},\s\d{4}']
+    # oral_sec_pattern = r'ITEM\s+\d{1,2}:\s+ORAL QUESTIONS\s*(.*?)\s*ITEM'
+    oral_sec_pattern = r'QUESTION PERIOD(.*)?Question Period has now elapsed'
+    quest_head_pattern = r'(Question\s+\d{1,3}.*?:)(.*?)(M[R|S]S{0,1}\.|HON\.|HONOURABLE)'
+    speaker_pattern = r'((?:M[R|S]S{0,1}\.|HON\.|HONOURABLE).*?):'
+
+    sec_head = 'QUESTION PERIOD'
+
+    try:
+        pdf_text = procpdf.pdf_to_text(pdf_path)
+        Yukon_logger.debug('Got pdf_text from %s' % pdf_path)
+        send_text_to_file('Yukon/tmp/'+str_date+'pdf_text.txt', pdf_text)
+        # flat_text = text_rem_patterns(pdf_text, title_patterns + ['\n'])
+        flat_text = text_rem_patterns(pdf_text, ['\n'])
+
+        if sec_head in flat_text:
+            print('(|)')
+            Yukon_logger.debug('ORAL QUESTION FOUND in %s' % pdf_path)
+            send_text_to_file('Yukon/tmp/'+str_date+'flat_text.txt',
+                              flat_text)
+            oral_q_section = text_extract_pattern(flat_text,
+                                                  oral_sec_pattern)
+            send_text_to_file('Yukon/tmp/'+str_date+'oral_q_sec.txt',
+                              oral_q_section.group(1))
+
+            csv_name = 'Yukon/csvs/' + file_prefix + str_date + '.csv'
+            procpdf.process_pdf_oral_q(oral_q_section.group(1),
+                                       quest_head_pattern, speaker_pattern,
+                                       csv_name, str_date)
+        else:
+            print('(-)')
+            Yukon_logger.debug('ORAL QUESTION NOT found in %s' % pdf_path)
+    except Exception as e:
+        print('(-)')
+        Yukon_logger.debug(
+            'Error extracting text from %s. Exception %s' % (pdf_path, e))
 
 
 def main():
@@ -66,7 +94,8 @@ def main():
 
     for idx in range(10):
         print(idx, ': ', tst_lst[idx]['mht'])
-        output_file = download_mht(tst_lst[idx]['mht'], "date_short",
+        output_file = download_mht(tst_lst[idx]['mht'],
+                                   tst_lst[idx]["date_short"],
                                    directory='Yukon/mhts/')
         print('\t:', output_file)
         outcome = extract_files(output_file)
@@ -74,8 +103,10 @@ def main():
             print('HTML conversion successful')
             html_file = HTML(outcome)
             pdf_name = output_file.split('/')[-1:][0].split('.')[0]
-            html_file.write_pdf('Yukon/pdfs/'+pdf_name+'.pdf')
-            print('Saved to pdf: Yukon/pdfs/'+pdf_name+'.pdf')
+            pdf_path = 'Yukon/pdfs/'+pdf_name+'.pdf'
+            html_file.write_pdf(pdf_path)
+            print('Saved to pdf:', pdf_path)
+            process_converted_pdfs(pdf_path, tst_lst[idx]["date_short"], '')
         else:
             print('HTML conversion successful')
 

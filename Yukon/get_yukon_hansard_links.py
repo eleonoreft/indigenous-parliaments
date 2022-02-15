@@ -9,8 +9,8 @@ yk_logger = get_logger("Get_Yukon_Hansard_Links",
 
 
 def main():
-    path_to_driver = '/Users/curtishendricks/Development/indigenous-parliaments /indigenous-parliaments/chromedriver'
-    site = 'https://yukonassembly.ca/house-business/hansard'
+    path_to_driver = '/Users/curtishendricks/Development/indigenous-parliaments/chromedriver'
+    site = 'https://yukonassembly.ca/house-business/hansard/recent-hansard-date'
 
     driver = get_web_driver(path_to_driver, site)
 
