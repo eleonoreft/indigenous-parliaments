@@ -3,7 +3,7 @@
 import re
 
 import indig_parl_utils as utils
-from indig_parl_re import text_split
+from indig_parl_re import get_pattern_match, text_rem_patterns, text_split
 
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
@@ -40,43 +40,40 @@ def pdf_to_text(path):
 
 def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
                        csv_name, str_date):
+
+
+    title_pttrn_1 = '\w+\s\d\d{0,1}\,{1}\s\d{4}   HANSARD   \d{2,4}'
+    title_pttrn_2 = '\d{2,4}   HANSARD   \w+\s\d\d{0,1}\,{1}\s\d{4}'
+    ques_title_pttrn = '^(?:  (.*?)  )'
+
+    rem_titles = text_rem_patterns(oral_q_section, rem_patterns=[title_pttrn_1, title_pttrn_2], replace_with='')
+
     # Drop the first element
-    quest_dialog_list = text_split(oral_q_section, question_head_ptrn)[1:]
-
-    utils.send_text_to_file('NWT/tmp/'+str_date+'raw_oral_questions_list.txt',
+    quest_dialog_list = text_split(rem_titles, question_head_ptrn)
+    utils.send_text_to_file('Yukon/tmp/'+str_date+'[3]-raw_oral_questions_list.txt',
                             quest_dialog_list, data_type='list')
-    # repair titles
-    new_list = []
-    # repair speakers titles
-    counter = 0
-    for idx in range(len(quest_dialog_list)):
-        if counter < 4:
-            counter += 1
-        else:
-            counter = 1
-        if counter % 3 == 0:
-            new_list.append(
-                quest_dialog_list[idx-2] + quest_dialog_list[idx-1])
-            new_list.append(quest_dialog_list[idx] + quest_dialog_list[idx+1])
-
-    quest_dialog_list = new_list
-    utils.send_text_to_file('NWT/tmp/'+str_date+'fixed_oral_questions_list.txt',
-                            quest_dialog_list, data_type='list')
-
+    
     speakers_table = []
-    for item in quest_dialog_list:
-        if item[:8] == 'Question':
-            loc1 = item
-        else:
-            speech_lst = text_split(item, speaker_ptrn)
-            loc2 = ''
-            loc3 = ''
-            for speech in speech_lst:
-                if speech.split(' ')[0] in SPEAKER_TITLES:
-                    loc2 = speech
-                else:
-                    loc3 = speech
-                    speakers_table.append((loc1, loc2, loc3))
+
+    for num in range(1, len(quest_dialog_list)):
+        title = get_pattern_match(quest_dialog_list[num], ques_title_pttrn)
+        title = title.group(1)
+        title_list = text_split(quest_dialog_list[num], ques_title_pttrn)
+        dialog = title_list[2]
+        dialog_list = text_split(dialog, speaker_ptrn)
+        tracker = 1
+        for idx in range(1, len(dialog_list)):
+            '''Strating from storage location 1, record only the first (member name) and third items (member dialogue) every three items'''
+            if tracker == 1:
+                member = dialog_list[idx].strip()[:-1]
+                tracker += 1
+            elif tracker == 2:
+                tracker += 1
+            elif tracker == 3:
+                member_diag = dialog_list[idx].strip()[:-1]
+                speakers_table.append([title, member, member_diag])
+                tracker = 1
+
 
     utils.csv_from_list(csv_name, speakers_table,
                         header_row=['Question', 'Speaker', 'Speech'])
