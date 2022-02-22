@@ -41,22 +41,22 @@ def pdf_to_text(path):
 def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
                        csv_name, str_date):
 
-
+    # Regex patterns to attempt to remove variations of the Hansard page headers form the extracted text
     title_pttrn_1 = '\w+\s\d\d{0,1}\,{1}\s\d{4}   HANSARD   \d{2,4}'
     title_pttrn_2 = '\d{2,4}   HANSARD   \w+\s\d\d{0,1}\,{1}\s\d{4}'
     title_pttrn_3 = '\w+\s\d\d{0,1}\,{1}\s\d{4}  HANSARD  \d{2,4}'
     title_pttrn_4 = '\d{2,4}  HANSARD  \w+\s\d\d{0,1}\,{1}\s\d{4}'
     title_pttrn_5 = 'HANSARD  \w+\s\d\d{0,1}\,{1}\s\d{4}  \d{2,4}'
-    # ques_title_pttrn = '^(?:  (.*?)  )'
-    # ques_title_pttrn = '^(?:\s{1,2}(.*?)  )'
+    # Question title pattern that should be at the start of the separated sections
     ques_title_pttrn = '^(?:(.*?)  )'
 
-
+    # Removing Hansard page headers
     rem_titles = text_rem_patterns(oral_q_section, rem_patterns=[title_pttrn_1, title_pttrn_2, title_pttrn_3, title_pttrn_4, title_pttrn_5], replace_with='')
-
-    # Drop the first element
+    # Splitting the sections in various discussions for each question
     quest_dialog_list = text_split(rem_titles, question_head_ptrn)
+    # Drop the first element
     quest_dialog_list = quest_dialog_list[1:]
+    # Removed starting whitespace to simplify pattern matching for question titles
     for idx in range(len(quest_dialog_list)):
         quest_dialog_list[idx] = quest_dialog_list[idx].lstrip()
     utils.send_text_to_file('Yukon/tmp/'+str_date+'[3]-raw_oral_questions_list.txt',
@@ -67,13 +67,17 @@ def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
     for num in range(1, len(quest_dialog_list)):
         title = get_pattern_match(quest_dialog_list[num], ques_title_pttrn)
         try:
+            # Get the question title
             title = title.group(1)
             title_list = text_split(quest_dialog_list[num], ques_title_pttrn)
+            # Remove the title and leave only dialog
             dialog = title_list[2]
+            # Split the dialogs by speaker names
             dialog_list = text_split(dialog, speaker_ptrn)
             tracker = 1
             for idx in range(1, len(dialog_list)):
-                '''Strating from storage location 1, record only the first (member name) and third items (member dialogue) every three items'''
+                # Starting from storage location 1, record only the first (member name) and third item (member dialogues) from every 3 items
+                # Variable 'tracker' is used to keep track on which position is being processed
                 if tracker == 1:
                     member = dialog_list[idx].strip()[:-1]
                     tracker += 1
