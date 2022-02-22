@@ -44,12 +44,21 @@ def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
 
     title_pttrn_1 = '\w+\s\d\d{0,1}\,{1}\s\d{4}   HANSARD   \d{2,4}'
     title_pttrn_2 = '\d{2,4}   HANSARD   \w+\s\d\d{0,1}\,{1}\s\d{4}'
-    ques_title_pttrn = '^(?:  (.*?)  )'
+    title_pttrn_3 = '\w+\s\d\d{0,1}\,{1}\s\d{4}  HANSARD  \d{2,4}'
+    title_pttrn_4 = '\d{2,4}  HANSARD  \w+\s\d\d{0,1}\,{1}\s\d{4}'
+    title_pttrn_5 = 'HANSARD  \w+\s\d\d{0,1}\,{1}\s\d{4}  \d{2,4}'
+    # ques_title_pttrn = '^(?:  (.*?)  )'
+    # ques_title_pttrn = '^(?:\s{1,2}(.*?)  )'
+    ques_title_pttrn = '^(?:(.*?)  )'
 
-    rem_titles = text_rem_patterns(oral_q_section, rem_patterns=[title_pttrn_1, title_pttrn_2], replace_with='')
+
+    rem_titles = text_rem_patterns(oral_q_section, rem_patterns=[title_pttrn_1, title_pttrn_2, title_pttrn_3, title_pttrn_4, title_pttrn_5], replace_with='')
 
     # Drop the first element
     quest_dialog_list = text_split(rem_titles, question_head_ptrn)
+    quest_dialog_list = quest_dialog_list[1:]
+    for idx in range(len(quest_dialog_list)):
+        quest_dialog_list[idx] = quest_dialog_list[idx].lstrip()
     utils.send_text_to_file('Yukon/tmp/'+str_date+'[3]-raw_oral_questions_list.txt',
                             quest_dialog_list, data_type='list')
     
@@ -57,22 +66,25 @@ def process_pdf_oral_q(oral_q_section, question_head_ptrn, speaker_ptrn,
 
     for num in range(1, len(quest_dialog_list)):
         title = get_pattern_match(quest_dialog_list[num], ques_title_pttrn)
-        title = title.group(1)
-        title_list = text_split(quest_dialog_list[num], ques_title_pttrn)
-        dialog = title_list[2]
-        dialog_list = text_split(dialog, speaker_ptrn)
-        tracker = 1
-        for idx in range(1, len(dialog_list)):
-            '''Strating from storage location 1, record only the first (member name) and third items (member dialogue) every three items'''
-            if tracker == 1:
-                member = dialog_list[idx].strip()[:-1]
-                tracker += 1
-            elif tracker == 2:
-                tracker += 1
-            elif tracker == 3:
-                member_diag = dialog_list[idx].strip()[:-1]
-                speakers_table.append([title, member, member_diag])
-                tracker = 1
+        try:
+            title = title.group(1)
+            title_list = text_split(quest_dialog_list[num], ques_title_pttrn)
+            dialog = title_list[2]
+            dialog_list = text_split(dialog, speaker_ptrn)
+            tracker = 1
+            for idx in range(1, len(dialog_list)):
+                '''Strating from storage location 1, record only the first (member name) and third items (member dialogue) every three items'''
+                if tracker == 1:
+                    member = dialog_list[idx].strip()[:-1]
+                    tracker += 1
+                elif tracker == 2:
+                    tracker += 1
+                elif tracker == 3:
+                    member_diag = dialog_list[idx].strip()[:-1]
+                    speakers_table.append([title, member, member_diag])
+                    tracker = 1
+        except Exception as e:
+            print(' >> Error accessing question title:', e)
 
 
     utils.csv_from_list(csv_name, speakers_table,
