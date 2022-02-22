@@ -2,16 +2,14 @@
 
 import csv
 import os
-import requests
 
 import process_pdfs as procpdf
 
 from weasyprint import HTML
 
 from indig_parl_logger import get_logger
-from indig_parl_utils import download_mht, download_pdf, send_text_to_file
+from indig_parl_utils import download_pdf, send_text_to_file
 from indig_parl_re import text_rem_patterns, text_extract_pattern
-from process_mhts import extract_files
 
 Yukon_logger = get_logger("Process_Yukon_Hansards",
                           a_log_file='Yukon/logs/proc_yukon_debug.log')
@@ -47,14 +45,13 @@ def get_csv_links(csv_pth, columns, line_zero=False):
 
 def process_pdfs(pdf_path, str_date, file_prefix):
 
-    # oral_sec_pattern = r'QUESTION PERIOD(.*)?Speaker:\s+The time for Question Period has now elapsed'
-    # oral_sec_pattern = 'QUESTION PERIOD(.*)?(?:Deputy){0,1}\s*Speaker:\s*The\s+time\s+for\s+Question\s+Period\s+has\s+now\s+elapsed'
-    # oral_sec_pattern = 'QUESTION PERIOD(.*)?:\s*The\s+time\s+for\s+Question\s+Period\s+has\s+now\s+elapsed'
-    # oral_sec_pattern = 'QUESTION PERIOD(.*)?\s*(?:The\s+){0,1}[T|t]ime\s+for\s+Question\s+Period\s+has\s+(?:\w+\s+){0,1}elapsed'
+    # Regex pattern for extracting the entire 'Question Period' section from the Hansard
     oral_sec_pattern = 'QUESTION PERIOD(.*)?\s*(?:The\s+){0,1}[T|t]ime\s+for\s+Question\s+Period'
+    # Regex pattern for splitting the 'Question Period' section into the various subsections with the discussion related to each question
     quest_head_pattern = r'Question re:'
+    # Regex pattern to pull out the names/titles of the persons discussing the questions from the 'Question Period' section
     speaker_pattern = r'((?:Hon\.\s){0,1}(?:Honourable\.\s){0,1}M[r|s]s{0,1}\.\s((?!Speaker).)*?:)'
-    sec_head = 'QUESTION PERIOD'
+    sec_head = 'QUESTION PERIOD' # String to identify if required section is in the document
     try:
         pdf_text = procpdf.pdf_to_text(pdf_path)
         Yukon_logger.debug('Got pdf_text from %s' % pdf_path)
@@ -113,37 +110,6 @@ def main():
             process_pdfs(pdf_file_loc+file, dte_string, prefix)
         # if count == 50: # The max number of pdfs to process
         #     break
-
-    # for idx in range(10):
-    #     print(idx, ': ', lst_hansard_lnks[idx]['pdf'])
-    #     output_file = download_pdf(lst_hansard_lnks[idx]['pdf'],
-    #                                lst_hansard_lnks[idx]["date_short"],
-    #                                directory='Yukon/pdfs/')
-    #     pdf_name = output_file.split('/')[-1:][0].split('.')[0]
-    #     process_pdfs(output_file, lst_hansard_lnks[idx]["date_short"], '')
-
-    # for idx in range(10):
-    #     print(idx, ': ', tst_lst[idx]['mht'])
-    #     output_file = download_mht(tst_lst[idx]['mht'],
-    #                                tst_lst[idx]["date_short"],
-    #                                directory='Yukon/mhts/')
-    #     print('\t:', output_file)
-    #     outcome = extract_files(output_file)
-    #     if outcome:
-    #         print('HTML conversion successful')
-    #         html_file = HTML(outcome)
-    #         pdf_name = output_file.split('/')[-1:][0].split('.')[0]
-    #         pdf_path = 'Yukon/pdfs/'+pdf_name+'.pdf'
-    #         html_file.write_pdf(pdf_path)
-    #         print('Saved to pdf:', pdf_path)
-    #         process_converted_pdfs(pdf_path, tst_lst[idx]["date_short"], '')
-    #     else:
-    #         print('HTML conversion successful')
-
-        # html_file = HTML(output_file)
-        # html_file.write_pdf('Yukon/pdfs/'+str(idx)+'.pdf')
-
-    
 
 
 if __name__ == '__main__':
