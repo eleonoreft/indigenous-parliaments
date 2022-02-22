@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
 import csv
+import os
 import requests
 
 import process_pdfs as procpdf
@@ -46,7 +47,11 @@ def get_csv_links(csv_pth, columns, line_zero=False):
 
 def process_pdfs(pdf_path, str_date, file_prefix):
 
-    oral_sec_pattern = r'QUESTION PERIOD(.*)?Speaker:\s+The time for Question Period has now elapsed'
+    # oral_sec_pattern = r'QUESTION PERIOD(.*)?Speaker:\s+The time for Question Period has now elapsed'
+    # oral_sec_pattern = 'QUESTION PERIOD(.*)?(?:Deputy){0,1}\s*Speaker:\s*The\s+time\s+for\s+Question\s+Period\s+has\s+now\s+elapsed'
+    # oral_sec_pattern = 'QUESTION PERIOD(.*)?:\s*The\s+time\s+for\s+Question\s+Period\s+has\s+now\s+elapsed'
+    # oral_sec_pattern = 'QUESTION PERIOD(.*)?\s*(?:The\s+){0,1}[T|t]ime\s+for\s+Question\s+Period\s+has\s+(?:\w+\s+){0,1}elapsed'
+    oral_sec_pattern = 'QUESTION PERIOD(.*)?\s*(?:The\s+){0,1}[T|t]ime\s+for\s+Question\s+Period'
     quest_head_pattern = r'Question re:'
     speaker_pattern = r'((?:Hon\.\s){0,1}(?:Honourable\.\s){0,1}M[r|s]s{0,1}\.\s((?!Speaker).)*?:)'
     sec_head = 'QUESTION PERIOD'
@@ -82,17 +87,40 @@ def process_pdfs(pdf_path, str_date, file_prefix):
 def main():
     # download handsards and store to locations to dictionaries
     # process the types of files
-    csv_tst_file = 'Yukon/yukon_hansards.csv'
+    yukon_hansard_lnks = 'Yukon/yukon_hansards.csv'
     csv_cols = ["Date_Long", "Date_Short", "MHT", "PDF"]
-    tst_lst = get_csv_links(csv_tst_file, csv_cols)
+    lst_hansard_lnks = get_csv_links(yukon_hansard_lnks, csv_cols)
 
-    for idx in range(10):
-        print(idx, ': ', tst_lst[idx]['pdf'])
-        output_file = download_pdf(tst_lst[idx]['pdf'],
-                                   tst_lst[idx]["date_short"],
-                                   directory='Yukon/pdfs/')
-        pdf_name = output_file.split('/')[-1:][0].split('.')[0]
-        process_pdfs(output_file, tst_lst[idx]["date_short"], '')
+    # # Download PDFs
+    # # count = 0   # To limit the number of pdfs downloaded
+    # for line in lst_hansard_lnks:
+    #     # count += 1
+    #     print(line['pdf'])
+    #     download_pdf(line['pdf'], line['date_short'], directory='Yukon/pdfs/')
+    #     # if count == 20: # The max number of pdfs to download
+    #     #     break
+    
+    # Process PDFs
+    pdf_file_loc = 'Yukon/pdfs/2020s/'
+    pdf_dir = os.listdir(pdf_file_loc)
+    # count = 0   # To limit the number of pdfs to process
+    for file in pdf_dir:
+        if os.path.isfile(os.path.join(pdf_file_loc, file)) and file.endswith('.pdf'):
+            # count += 1
+            # print(f' >> {file}. Date: {file[1:11]} ')
+            dte_string = file[1:11]
+            prefix = ''
+            process_pdfs(pdf_file_loc+file, dte_string, prefix)
+        # if count == 50: # The max number of pdfs to process
+        #     break
+
+    # for idx in range(10):
+    #     print(idx, ': ', lst_hansard_lnks[idx]['pdf'])
+    #     output_file = download_pdf(lst_hansard_lnks[idx]['pdf'],
+    #                                lst_hansard_lnks[idx]["date_short"],
+    #                                directory='Yukon/pdfs/')
+    #     pdf_name = output_file.split('/')[-1:][0].split('.')[0]
+    #     process_pdfs(output_file, lst_hansard_lnks[idx]["date_short"], '')
 
     # for idx in range(10):
     #     print(idx, ': ', tst_lst[idx]['mht'])
@@ -114,6 +142,8 @@ def main():
 
         # html_file = HTML(output_file)
         # html_file.write_pdf('Yukon/pdfs/'+str(idx)+'.pdf')
+
+    
 
 
 if __name__ == '__main__':
